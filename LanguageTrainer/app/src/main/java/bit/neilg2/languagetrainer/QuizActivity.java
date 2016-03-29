@@ -1,5 +1,6 @@
 package bit.neilg2.languagetrainer;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Random;
@@ -19,28 +21,45 @@ public class QuizActivity extends AppCompatActivity {
     String[] nouns = {"Apfel", "Auto", "Baum", "Ente", "Haus", "Hexe", "Kuh", "Milch", "Schaf", "Strasse", "Stuhl"};
     int correctSoFar = 0;
     int currentQuestionNumber = 0;
-    private String article;
-    private String theirAnswer;
     private boolean answerTrue;
     int correctAnswers = 0;
-
+    int amountOfAnswers = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
-
-        // RadioGroup RadioGroup_languageChoice = (RadioGroup) findViewById(R.id.RadioGroup_languageChoice);
-
+        amountOfAnswers = articles.length;
         setUpButton();
         questShuffle();
         displayQuestion();
 
+    }
 
+    public class answerSelectedHandler implements RadioGroup.OnCheckedChangeListener{
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            Button buttonSubmit = (Button)findViewById(R.id.btnSubmit);
+            buttonSubmit.setEnabled(true);
+        }
     }
 
     private void displayQuestion() {
+        //clear checked radio buttons
+        RadioGroup chosenButton = (RadioGroup) findViewById(R.id.RadioGroup_languageChoice);
+        chosenButton.clearCheck();
+        //disable button
+        Button buttonSubmit = (Button)findViewById(R.id.btnSubmit);
+        buttonSubmit.setEnabled(false);
+
         ImageView picture = (ImageView) findViewById(R.id.questionPic);
         picture.setImageResource(getImageID());
+        //Set question number
+        //get refernece to the textview
+         TextView questionText=(TextView)findViewById(R.id.tvQuestionNumber);
+        //Create the display string
+        String output="Question number: "+Integer.toString(currentQuestionNumber+1);
+        //Set the text on the text view
+        questionText.setText(output);
     }
 
     private int getImageID() {
@@ -61,25 +80,50 @@ public class QuizActivity extends AppCompatActivity {
 
     private void setUpButton() {
         //Get reference to button
-        Button sumbitButton = (Button) findViewById(R.id.btnSubmit);
+        Button submitButton = (Button) findViewById(R.id.btnSubmit);
         //Set handler
-        sumbitButton.setOnClickListener(new btnSubmitHandler());
+        submitButton.setOnClickListener(new btnSubmitHandler());
+        //find radioGroup referance
+        RadioGroup radioGroupanswers = (RadioGroup)findViewById(R.id.RadioGroup_languageChoice);
+        //set onCheckedChange
+        radioGroupanswers.setOnCheckedChangeListener(new answerSelectedHandler());
     }
-
     public class btnSubmitHandler implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            //if correct, display correct messaage and increrment correctSoFar
+            //Get their answer
+            String theirAnswer=getTheirAnswer();
             //if wrong, display wrong message
-            checkCorrect();
+            if(checkCorrect(theirAnswer)) {
+                Toast.makeText(QuizActivity.this, "You answered: " + theirAnswer + " this is the correct answer.", Toast.LENGTH_SHORT).show();
+                correctAnswers++;
+            } else {
+                Toast.makeText(QuizActivity.this, "You answered: " + theirAnswer + " this is the wrong answer.", Toast.LENGTH_SHORT).show();
+            }
             //increment currentquestion
             currentQuestionNumber++;
-            //else display next question
-            displayQuestion();
+            //check for all questions answered
+            if (currentQuestionNumber==amountOfAnswers){
+                showResultsActivity();
+            } else {
+                //else display next question
+                displayQuestion();
+            }
         }
     }
 
-    public boolean checkCorrect() {
+    private void showResultsActivity(){
+        //Create an intent
+        Intent nextActivity = new Intent(QuizActivity.this,resultsActivity.class);
+
+        //Bundle required data
+        nextActivity.putExtra("CorrectAnswers", correctAnswers);
+        nextActivity.putExtra("TotalAnswers", articles.length);
+        //start the activity
+        startActivity(nextActivity);
+    }
+    //Gets the users answer
+    private String getTheirAnswer() {
         //get radio group
         RadioGroup chosenButton = (RadioGroup) findViewById(R.id.RadioGroup_languageChoice);
         //get item from group
@@ -87,17 +131,15 @@ public class QuizActivity extends AppCompatActivity {
         RadioButton SelectedRadioBtn = (RadioButton) findViewById(radioButtonItem);
 
         String theirAnswer = SelectedRadioBtn.getText().toString();
-        String article = articles[currentQuestionNumber];
 
-        if (theirAnswer.equals(article)) {
-            Toast.makeText(QuizActivity.this, "You answered: " + theirAnswer + " this is the correct answer.", Toast.LENGTH_SHORT).show();
-            answerTrue = true;
-            correctAnswers++;
-        } else {
-            Toast.makeText(QuizActivity.this, "You answered: " + theirAnswer + " this is the wrong answer.", Toast.LENGTH_SHORT).show();
-            answerTrue = false;
-        }
-        return answerTrue;
+        return theirAnswer;
+    }
+
+    //checks to see if the user answer is correct
+    public boolean checkCorrect(String theirAnswer) {
+        String article = articles[currentQuestionNumber];
+        //if correct then increment the number of correct answers and give feedback
+        return (theirAnswer.equals(article));
     }
 
     public void questShuffle() {

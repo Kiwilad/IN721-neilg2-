@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:text="Der"
                 android:id="@+id/rdoBtnDer"
-                android:checked="true"/>
+                android:checked="false"/>
 
             <RadioButton
                 android:layout_width="wrap_content"
@@ -75,4 +75,13 @@
                 android:layout_gravity="center_horizontal" />
         </RadioGroup>
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text=""
+        android:id="@+id/tvQuestionNumber"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>
